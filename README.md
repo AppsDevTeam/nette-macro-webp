@@ -4,7 +4,7 @@ Nette Macro Webp
 Installation
 ---------
 
-`$ composer require adt/nette-macro-webp:^1.0`
+`$ composer require adt/nette-macro-webp:@dev`
 
 To your `config.neon` add:
 
