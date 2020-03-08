@@ -11,7 +11,7 @@ To your `config.neon` add:
 ```neon
 latte:
 	macros:
-		- App\WebpSrcMacro::install
+		- ADT\WebpSrcMacro::install
 ```
 
 Usage
