@@ -9,9 +9,8 @@ Installation
 To your `config.neon` add:
 
 ```neon
-latte:
-	macros:
-		- ADT\WebpSrcMacro::install
+extensions:
+	webpSrcMacroExtension: ADT\WebpSrcMacroExtension
 ```
 
 Usage
@@ -26,13 +25,13 @@ Usage
 Output
 ---------
 
-If `myImage.webp` exists:
+If browser send header `Accept: image/webp`:
 
 ```html
-<img src="myImage.webp" onerror="this.onerror=null; this.src='myImage.jpg'">
+<img src="myImage.webp">
 ```
 
-If `myImage.webp` do not exists:
+If do not:
 
 ```html
 <img src="myImage.jpg">

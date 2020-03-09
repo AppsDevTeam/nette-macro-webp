@@ -7,11 +7,25 @@ use Latte\Compiler;
 use Latte\MacroNode;
 use Latte\Macros\MacroSet;
 use Latte\PhpWriter;
+use Nette\Http\Request;
 use Nette\Http\Url;
 use Nette\Utils\Strings;
 
 class WebpSrcMacro
 {
+
+	/**
+	 * @var Request
+	 */
+	private $request;
+	
+	/** @var bool */
+	public $acceptWebp = NULL;
+
+	public function __construct(Request $request)
+	{
+		$this->request = $request;
+	}
 
 	public static function install(Compiler $compiler)
 	{
@@ -22,39 +36,36 @@ class WebpSrcMacro
 				throw new CompileException('It is not possible to combine src with n:webpSrc.');
 			}
 
-			return $writer->write(self::class . "::renderSrc(%node.word);");
+			return $writer->write('$this->global->webpSrcMacroService->renderSrc(%node.word);');
 
 		});
 	}
 
-	public static function renderSrc($originalSrc)
+	private function isClientAcceptingWebp()
 	{
+		if ($this->acceptWebp === NULL) {
+			$this->acceptWebp = strpos($this->request->getHeader('Accept'), 'image/webp') !== false;
+		}
+		return $this->acceptWebp;
+	}
+
+	public function renderSrc($originalSrc)
+	{
+		if (!$this->isClientAcceptingWebp()) {
+			echo ' src="'.$originalSrc.'"';
+			return;
+		}
+
 		$originalUrl = new Url($originalSrc);
 		if (Strings::endsWith($originalUrl->path, ".webp")) {
 			echo ' src="'.$originalSrc.'"';
 			return;
 		}
 
-		$originalPathParts = [];
-		$originalPathParts[] = $_SERVER['DOCUMENT_ROOT'];
-		if (!Strings::startsWith($originalUrl->path, "/")) {
-			$requestUrl = new Url($_SERVER['REQUEST_URI']);
-			if ($requestUrl->path !== "/") {
-				$originalPathParts[] = Strings::trim($requestUrl->path, "/");
-			}
-		}
-		$originalPathParts[] = Strings::trim($originalUrl->path, "/");
-		$originalPath = implode("/", $originalPathParts);
-		$webpPath = preg_replace("/\.[^\/.]+$/", ".webp", $originalPath);
-
-		if (file_exists($webpPath)) {
-			$webpUrl = clone $originalUrl;
-			$webpUrl->path = preg_replace("/\.[^\/.]+$/", ".webp", $originalUrl->path);
-			$webpSrc = (string)$webpUrl;
-			echo ' src="'.$webpSrc.'" onerror="this.onerror=null; this.src=\''.$originalSrc.'\'"';
-		} else {
-			echo ' src="'.$originalSrc.'"';
-		}
+		$webpUrl = clone $originalUrl;
+		$webpUrl->path = preg_replace("/\.[^\/.]+$/", ".webp", $originalUrl->path);
+		$webpSrc = (string)$webpUrl;
+		echo ' src="'.$webpSrc.'"';
 	}
 
 }
